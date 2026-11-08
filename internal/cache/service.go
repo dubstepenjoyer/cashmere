@@ -57,7 +57,7 @@ func New(storage Storage, providers map[string]ProviderBinding) (*Service, error
 
 	return &Service{
 		storage:   storage,
-		providers: providers,
+		providers: registered,
 	}, nil
 }
 

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dubstepenjoyer/cachmere/internal/cache"
+	"github.com/dubstepenjoyer/cashmere/internal/cache"
 )
 
 type item struct {
@@ -18,12 +18,12 @@ type item struct {
 type Storage struct {
 	mu       sync.Mutex
 	entries  map[cache.Key]item
-	capacity int64
+	capacity int
 }
 
 var _ cache.Storage = (*Storage)(nil)
 
-func New(capacity int64) (*Storage, error) {
+func New(capacity int) (*Storage, error) {
 	if capacity <= 0 {
 		return nil, fmt.Errorf("capacity must be greater then 0")
 	}
@@ -68,6 +68,21 @@ func (s *Storage) Set(ctx context.Context, key cache.Key, entry cache.Entry, exp
 	if !time.Now().Before(expiresAt) {
 		delete(s.entries, key)
 		return nil
+	}
+
+	if len(s.entries) == s.capacity {
+		var keyToDelete cache.Key
+		oldestTime := time.Now()
+		for key, record := range s.entries {
+			if record.expiresAt.Before(oldestTime) {
+				keyToDelete = key
+				oldestTime = record.expiresAt
+			}
+		}
+
+		if err := s.Delete(ctx, keyToDelete); err != nil {
+			return fmt.Errorf("%w: capacity=%d", cache.ErrStorageFull, s.capacity)
+		}
 	}
 
 	entry.Value = bytes.Clone(entry.Value)

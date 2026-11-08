@@ -1,4 +1,4 @@
-module github.com/dubstepenjoyer/cachmere
+module github.com/dubstepenjoyer/cashmere
 
 go 1.26.10
 
