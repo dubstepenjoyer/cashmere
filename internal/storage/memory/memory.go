@@ -70,18 +70,23 @@ func (s *Storage) Set(ctx context.Context, key cache.Key, entry cache.Entry, exp
 		return nil
 	}
 
-	if len(s.entries) == s.capacity {
+	_, exists := s.entries[key]
+
+	if !exists && len(s.entries) >= s.capacity {
 		var keyToDelete cache.Key
-		oldestTime := time.Now()
-		for key, record := range s.entries {
-			if record.expiresAt.Before(oldestTime) {
-				keyToDelete = key
-				oldestTime = record.expiresAt
+		var earliestExpiry time.Time
+		found := false
+
+		for storedKey, stored := range s.entries {
+			if !found || stored.expiresAt.Before(earliestExpiry) {
+				keyToDelete = storedKey
+				earliestExpiry = stored.expiresAt
+				found = true
 			}
 		}
 
-		if err := s.Delete(ctx, keyToDelete); err != nil {
-			return fmt.Errorf("%w: capacity=%d", cache.ErrStorageFull, s.capacity)
+		if found {
+			delete(s.entries, keyToDelete)
 		}
 	}
 

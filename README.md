@@ -1,2 +1,2 @@
 # cashmere
-Go cache app with custom cash data provider
+Go cache app with custom cache data provider

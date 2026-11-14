@@ -79,7 +79,7 @@ func (s *Service) Set(ctx context.Context, key Key, entry Entry) error {
 	}
 
 	if entry.NotFound && len(entry.Value) > 0 {
-		return fmt.Errorf("%w: a negative entry must contain a value", ErrInvalidEntry)
+		return fmt.Errorf("%w: a negative entry must not contain a value", ErrInvalidEntry)
 	}
 
 	ttl := binding.Policy.MaxAge
@@ -174,7 +174,7 @@ func (s *Service) Get(ctx context.Context, key Key) (Result, error) {
 		NotFound:  errors.Is(fetchErr, ErrNotFound),
 	}
 
-	if loaded.NotFound {
+	if !loaded.NotFound {
 		loaded.Value = value
 	}
 
